@@ -1,30 +1,44 @@
 import json
 import logging
 import os
+from datetime import datetime
 from os import PathLike
 
 
 class Journal:
     def __init__(self, path: PathLike):
-        self.fss_scans = []
-        self.detailed_scans = []
+        self.entries = []
         self.path = path
         self.logger = logging.getLogger('EDExo')
 
-        journals = [os.path.join(path, file) for file in [f for f in os.listdir(path) if f.startswith("Journal.")]]
-        self.journal = max(journals, key=os.path.getmtime)
-        self.logger.info(f"Selected most recently modified journal {self.journal}")
-        for line in open(self.journal, "rb").readlines():
-            self.parse(line)
+        odyssey_release_date = datetime(2021, 5, 19)
 
-        self.logger.info(f"Loaded {len(self.detailed_scans) + len(self.fss_scans)} events from {self.journal}")
+        journals = [os.path.join(path, file) for file in os.listdir(path)
+                    if file.startswith("Journal.") and
+                    os.path.getmtime(os.path.join(path, file)) > odyssey_release_date.timestamp()]
 
-    def parse(self, entry: bytes):
-        loaded = json.loads(entry)
-        if loaded['event'] == "FSSBodySignals":
-            self.fss_scans.append(loaded)
-        elif loaded['event'] == "Scan" and loaded['ScanType'] == "Detailed":
-            self.detailed_scans.append(loaded)
+        for journal in journals:
+            self.logger.info(f"Parsing {journal}")
+            with open(journal, "r", encoding='utf-8') as file:
+                lines = file.readlines()
+                if json.loads(lines[0]).get("Odyssey"):
+                    for line in lines:
+                        self.parse(line)
+
+        self.logger.info(f"Loaded {len(self.entries)} events")
+
+    def parse(self, entry: str):
+        entry = json.loads(entry)
+        event = entry['event']
+
+        # parsing bullshit
+        # only add entry to journal iff it's either Scan or FSSBodySignals and the planet is not a star, belt, or ring
+        if (
+            ((event == 'Scan' and entry['ScanType'] == 'Detailed') or event == 'FSSBodySignals')
+            and not entry.get('StarType')
+            and all(x not in entry['BodyName'] for x in ["Belt Cluster", "Ring"])
+        ):
+            self.entries.append(entry)
 
     def watch(self):
         """
