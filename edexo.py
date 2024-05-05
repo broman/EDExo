@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
+from helper.enum.atmosphere import Atmosphere
 from journal import Journal
 from planet import Planet
 
@@ -11,6 +12,10 @@ from planet import Planet
 class EDExo:
     def __init__(self):
         self.planets: [Planet] = []
+        self.invalid_bodies = [
+            "Earthlike body",
+            "Metal rich body"
+        ]
 
         # locate most recent journal file and parse it
         self.logger = logging.getLogger('EDExo')
@@ -24,9 +29,10 @@ class EDExo:
         self.journal = Journal(self.path)
 
         for event in self.journal.entries:
+            self.logger.info(event)
             self.parse_planet(event)
 
-        [self.logger.info(x) for x in self.planets]
+        # [self.logger.info(x) for x in self.planets if x.atmosphere]
 
     def parse_planet(self, event: dict):
         name: str = event['BodyName']
@@ -45,7 +51,13 @@ class EDExo:
             system_name = event['StarSystem']
             distance = event['DistanceFromArrivalLS']
             planet_class = event['PlanetClass']
+            if "body" not in planet_class or planet_class in self.invalid_bodies:
+                return
             atmosphere = event.get('Atmosphere')
+            if not atmosphere:
+                return
+            atmosphere = Atmosphere(atmosphere)
+
             atmosphere_type = event.get('AtmosphereType')
             atmosphere_composition = event.get('Atmosphere_Type')
 

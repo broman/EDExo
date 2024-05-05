@@ -1,6 +1,7 @@
 import logging
 
-from helper.enum.planetclass import PlanetClass, get_class
+from helper.enum.atmosphere import Atmosphere
+from helper.enum.planetclass import PlanetClass
 
 
 class Planet:
@@ -10,7 +11,7 @@ class Planet:
             system_name: str = None,
             distance: float = None,
             planet_class: str = None,
-            atmosphere: str = None,
+            atmosphere: Atmosphere = None,
             volcanism: str = None,
             gravity: float = None,
             temperature: int = None,
@@ -25,12 +26,15 @@ class Planet:
         self.temperature = temperature
         self.signals = signals
 
-        self.cls: PlanetClass = get_class(planet_class)
+        if planet_class and "body" in planet_class:
+            self.cls: PlanetClass = PlanetClass(planet_class)
+        else:
+            self.cls = PlanetClass.INVALID
 
     def update(self, **kwargs) -> None:
         for key, value in kwargs.items():
             if key == 'planet_class':
-                self.cls = get_class(value)
+                self.cls = PlanetClass(value)
             else:
                 setattr(self, key, value)
 
