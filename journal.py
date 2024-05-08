@@ -3,21 +3,35 @@ import logging
 import os
 from datetime import datetime
 from os import PathLike
-from typing import Optional
+from typing import Optional, Callable
 
 from helper.enum.atmosphere import Atmosphere
+from helper.enum.volcanism import Volcanism
 from planet import Planet
 
 
+def get_volcanism(volcanism: str) -> Volcanism:
+    volcanism = (volcanism
+                 .replace("geysers", '')
+                 .replace("volcanism", '')
+                 .replace("magma", '')
+                 .replace("major", '')
+                 .replace("minor", '')
+                 )
+
+    return Volcanism(volcanism)
+
+
 class Journal:
-    def __init__(self, path: PathLike):
+    def __init__(self, path: PathLike, callback: Callable[[], None]):
+        self.callback = callback
+        self.path = path
         self.entries = []
         self.planets = []
         self.invalid_bodies = [
             "Earthlike body",
             "Metal rich body"
         ]
-        self.path = path
         self.logger = logging.getLogger('EDExo')
 
         odyssey_release_date = datetime(2021, 5, 19)
@@ -108,6 +122,7 @@ class Journal:
 
     def watch(self):
         """
+        TODO
         Watches the journal for new events and parses them
         """
         pass

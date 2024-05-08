@@ -1,17 +1,15 @@
-import logging
 import json
+import logging
 import os
 from pathlib import Path
-from typing import Optional
 
-from helper.enum.atmosphere import Atmosphere
 from journal import Journal
-from planet import Planet
 
 
 class EDExo:
     def __init__(self):
         # locate most recent journal file and parse it
+        self.planets = []
         self.logger = logging.getLogger('EDExo')
         self.logger.info("Reading settings from file")
         self.path = json.load(open('settings.json'))
@@ -20,7 +18,11 @@ class EDExo:
         if not self.path:
             logging.error(f'No journal file found in {self.path}')
             raise FileNotFoundError("No journal file found")
-        self.journal = Journal(self.path)
+        self.journal = Journal(self.path, self.on_new_event)
+        self.planets = self.journal.planets
+        [self.logger.info(x) for x in self.planets]
+
+    def on_new_event(self):
         self.planets = self.journal.planets
 
 

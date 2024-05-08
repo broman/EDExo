@@ -32,6 +32,9 @@ class Atmosphere:
             self.atmosphere_density
         ) = parse_atmosphere(atmosphere)
 
+    def __str__(self):
+        return " ".join(str(x) for x in [self.atmosphere_type, self.atmosphere_volume, self.atmosphere_density])
+
 
 class AtmosphereType(Enum):
     AMMONIA = "ammonia"

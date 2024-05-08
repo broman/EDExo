@@ -19,17 +19,13 @@ class Planet:
     ):
         self.name = name
         self.system_name = system_name
+        self.cls = None
         self.distance = distance
         self.atmosphere = atmosphere
         self.volcanism = volcanism
         self.gravity = gravity
         self.temperature = temperature
         self.signals = signals
-
-        if planet_class and "body" in planet_class:
-            self.cls: PlanetClass = PlanetClass(planet_class)
-        else:
-            self.cls = PlanetClass.INVALID
 
     def update(self, **kwargs) -> None:
         for key, value in kwargs.items():
@@ -39,4 +35,4 @@ class Planet:
                 setattr(self, key, value)
 
     def __str__(self) -> str:
-        return f"""name: {self.name} system_name: {self.system_name} distance: {self.distance} cls: {self.cls} atmosphere: {self.atmosphere} volcanism: {self.volcanism} gravity: {self.gravity} temperature: {self.temperature} signals: {self.signals}"""
+        return str({k: str(v) if hasattr(v, "__dict__") else v for k, v in vars(self).items()})
